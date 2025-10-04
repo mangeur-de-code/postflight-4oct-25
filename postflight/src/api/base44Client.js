@@ -13,40 +13,33 @@ class ApiClient {
       ...options.headers,
     };
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
 
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
+      // Handle Unauthorized
+      if (response.status === 401) {
+        window.location.href = `/api/auth/signin?redirect=${encodeURIComponent(window.location.href)}`;
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      // Handle No Content responses
+      if (response.status === 204) {
+        return null;
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('API request error:', error);
+      throw error;
     }
-
-    return response.json();
-  }
-
-  // Flight operations
-  async getFlights(params = {}) {
-    return this.request('flights', { method: 'GET', params });
-  }
-
-  async createFlight(data) {
-    return this.request('flights', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateFlight(id, data) {
-    return this.request(`flights/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async deleteFlight(id) {
-    return this.request(`flights/${id}`, { method: 'DELETE' });
   }
 }
 
-export const base44 = new ApiClient(BASE_URL);
+export const apiClient = new ApiClient(BASE_URL);

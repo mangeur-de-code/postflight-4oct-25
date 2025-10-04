@@ -40,8 +40,28 @@ CREATE TABLE "Currency" (
     CONSTRAINT "Currency_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "FlightGroup" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "id_code" TEXT NOT NULL,
+    "admin_email" TEXT NOT NULL,
+    "created_by_name" TEXT,
+    "members" JSONB NOT NULL,
+    "pending_members" JSONB NOT NULL,
+    "created_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_date" TIMESTAMP(3) NOT NULL,
+    "created_by_id" TEXT NOT NULL,
+
+    CONSTRAINT "FlightGroup_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "FlightGroup_id_code_key" ON "FlightGroup"("id_code");
 
 -- AddForeignKey
 ALTER TABLE "Flight" ADD CONSTRAINT "Flight_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

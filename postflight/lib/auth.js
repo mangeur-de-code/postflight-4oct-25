@@ -1,21 +1,23 @@
-import jwt from 'jsonwebtoken';
+import NextAuth from 'next-auth'
+import GoogleProvider from '@auth/core/providers/google'
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-export async function verifyAuth(authHeader) {
-  const token = authHeader.replace('Bearer ', '');
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    return decoded;
-  } catch (error) {
-    throw new Error('Invalid token');
-  }
+export const options = {
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
+  callbacks: {
+    async session({ session, token }) {
+      session.user.id = token.sub;
+      return session;
+    },
+  },
+  pages: {
+    signIn: '/api/auth/signin',
+    signOut: '/api/auth/signout',
+  },
 }
 
-export async function generateToken(user) {
-  return jwt.sign(
-    { userId: user.id, email: user.email },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-}
+export const { handlers, auth, signIn, signOut } = NextAuth(options);
