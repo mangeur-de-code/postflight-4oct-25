@@ -6,8 +6,16 @@
     { "source": "/(.*)", "destination": "/" }
   ],
   "env": {
-    "VITE_API_BASE_URL": "@vite_api_base_url",
-    "VITE_AUTH_URL": "@vite_auth_url",
-    "VITE_BASE44_APP_ID": "@vite_base44_app_id"
-  }
+    "DATABASE_URL": "@database_url",
+    "JWT_SECRET": "@jwt_secret"
+  },
+  "version": 2,
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "package.json", "use": "@vercel/static-build" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/[[...path]].js" },
+    { "src": "/(.*)", "dest": "/" }
+  ]
 }
