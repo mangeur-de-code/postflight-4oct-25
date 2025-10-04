@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
+import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../lib/prisma';
 import { verifyAuth } from '../lib/auth';
-
-export const config = {
-  runtime: 'edge',
-};
 
 // Middleware to verify authentication
 async function withAuth(req, handler) {
