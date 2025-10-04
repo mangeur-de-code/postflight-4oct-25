@@ -1,28 +1,34 @@
-import { NextResponse } from 'next/server';
-import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '../lib/prisma';
-import { verifyAuth } from '../lib/auth';
+import prisma from '../l      switch (method) {
+        case 'GET':
+          return await handleGet(path, req, res);
+        case 'POST':
+          return await handlePost(path, req, res);
+        case 'PUT':
+          return await handlePut(path, req, res);
+        case 'DELETE':
+          return await handleDelete(path, req, res);
+        default:
+          return res.status(405).json({ error: 'Method not allowed' });import { verifyAuth } from '../lib/auth';
 
 // Middleware to verify authentication
-async function withAuth(req, handler) {
-  const authHeader = req.headers.get('authorization');
+async function withAuth(req, res, handler) {
+  const authHeader = req.headers.authorization;
   if (!authHeader) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return res.status(401).json({ error: 'Unauthorized' });
   }
   
   try {
     const user = await verifyAuth(authHeader);
-    return handler(req, user);
+    return handler(req, res, user);
   } catch (error) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 }
 
-export default async function handler(req) {
-  return withAuth(req, async (req, user) => {
+export default async function handler(req, res) {
+  return withAuth(req, res, async (req, res, user) => {
     const { method } = req;
-    const url = new URL(req.url);
-    const path = url.pathname.replace('/api/', '');
+    const path = Array.isArray(req.query.path) ? req.query.path.join('/') : req.query.path || '';
 
     try {
       switch (method) {
@@ -37,7 +43,7 @@ export default async function handler(req) {
         case 'DELETE':
           return await handleDelete(path);
         default:
-          return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+          return res.status(405).json({ error: 'Method not allowed' });
       }
     } catch (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -45,56 +51,56 @@ export default async function handler(req) {
   });
 }
 
-async function handleGet(path, params) {
+async function handleGet(path, req, res) {
   if (path === 'flights') {
     const flights = await prisma.flight.findMany({
       where: {
-        userId: params.get('userId')
+        userId: req.query.userId
       },
       orderBy: { date: 'desc' }
     });
-    return NextResponse.json({ data: flights });
+    return res.json({ data: flights });
   }
-  throw new Error('Not found');
+  return res.status(404).json({ error: 'Not found' });
 }
 
-async function handlePost(path, body) {
+async function handlePost(path, req, res) {
   if (path === 'flights') {
     const flight = await prisma.flight.create({
       data: {
-        ...body,
-        date: new Date(body.date)
+        ...req.body,
+        date: new Date(req.body.date)
       }
     });
-    return NextResponse.json(flight);
+    return res.json(flight);
   }
-  throw new Error('Not found');
+  return res.status(404).json({ error: 'Not found' });
 }
 
-async function handlePut(path, body) {
+async function handlePut(path, req, res) {
   const matches = path.match(/flights\/([^\/]+)/);
   if (matches) {
     const id = matches[1];
     const flight = await prisma.flight.update({
       where: { id },
       data: {
-        ...body,
-        date: new Date(body.date)
+        ...req.body,
+        date: new Date(req.body.date)
       }
     });
-    return NextResponse.json(flight);
+    return res.json(flight);
   }
-  throw new Error('Not found');
+  return res.status(404).json({ error: 'Not found' });
 }
 
-async function handleDelete(path) {
+async function handleDelete(path, req, res) {
   const matches = path.match(/flights\/([^\/]+)/);
   if (matches) {
     const id = matches[1];
     await prisma.flight.delete({
       where: { id }
     });
-    return NextResponse.json({ success: true });
+    return res.json({ success: true });
   }
-  throw new Error('Not found');
+  return res.status(404).json({ error: 'Not found' });
 }

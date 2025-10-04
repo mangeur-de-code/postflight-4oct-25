@@ -7,16 +7,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  flights   Flight[]
+}
+
 model Flight {
-  id          String   @id @default(uuid())
-  date        DateTime
-  aircraft    String
-  departure   String
-  arrival     String
-  duration    Float
-  landings    Int
-  remarks     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String
+  id            String   @id @default(cuid())
+  date          DateTime
+  aircraft      String
+  registration  String?
+  departure     String
+  arrival       String
+  duration      Float
+  landings      Int      @default(1)
+  type          String?  // Day, Night, IFR, etc.
+  remarks       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Currency {
+  id        String    @id @default(cuid())
+  type      String    // Type of currency (e.g., Landing, IFR, Night)
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  userId    String
+}
+
+model FlightGroup {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  idCode        String    @unique @map("id_code")
+  adminEmail    String    @map("admin_email")
+  createdByName String?   @map("created_by_name")
+  members       Json      // Array of { email: string, full_name: string }
+  pendingMembers Json     @map("pending_members") // Array of { email: string, full_name: string }
+  createdAt     DateTime  @default(now()) @map("created_date")
+  updatedAt     DateTime  @updatedAt @map("updated_date")
+  createdById   String    @map("created_by_id")
 }
